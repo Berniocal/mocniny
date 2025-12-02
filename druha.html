@@ -259,7 +259,6 @@ function texFracSimple(fr){
 }
 
 /* ---------- generátor 15 typů příkladů na druhou mocninu ---------- */
-
 function generateQuestions(){
   const qs = [];
 
@@ -307,20 +306,18 @@ function generateQuestions(){
     _base4Str: base4Str
   });
 
-  // 5) velká čísla – 2 až 5 cifer, samé nuly a:
-  //    - buď jen první cifra nenulová (3000, 500, 9000, …)
-  //    - nebo první dvě cifry 11–19 a zbytek nuly (1100, 19000, …)
+  // 5) velká čísla – 2 až 5 cifer, samé nuly …
   function genType5Base(){
     const len = randInt(2,5);
     const useTwo = Math.random()<0.5;
     if(useTwo && len>=2){
       const firstTwo = randInt(11,19);
       const pow10 = Math.pow(10, len-2);
-      return firstTwo * pow10;   // 11..19, 110..190, 1100..1900, 11000..19000
+      return firstTwo * pow10;
     }else{
       const firstDigit = randInt(1,9);
       const pow10 = Math.pow(10, len-1);
-      return firstDigit * pow10; // 10,20,...,90000
+      return firstDigit * pow10;
     }
   }
 
@@ -335,16 +332,16 @@ function generateQuestions(){
     _base5Int: n5
   });
 
-  // 6) číslo ze 4) záporně ve smyslu 2) -> (−a)^2, výsledek kladný
+  // 6) číslo ze 4) záporně ve smyslu 2)
   const base6Frac = makeFrac(-base4Frac.n, base4Frac.d);
-  const res6 = mulFrac(base6Frac, base6Frac); // stejné jako 4), ale jiný zápis
+  const res6 = mulFrac(base6Frac, base6Frac);
   qs.push({
     latex: '\\left(-' + base4Str + '\\right)^2 =',
     frac: res6,
     value: fracValue(res6)
   });
 
-  // 7) číslo ze 4) záporně ve smyslu 3) -> -a^2, výsledek záporný
+  // 7) číslo ze 4) záporně ve smyslu 3)
   const sq4 = mulFrac(base4Frac, base4Frac);
   const res7 = makeFrac(-sq4.n, sq4.d);
   qs.push({
@@ -353,7 +350,7 @@ function generateQuestions(){
     value: fracValue(res7)
   });
 
-  // 8) číslo ze 5) záporně ve smyslu 2) -> (−n5)^2
+  // 8) číslo ze 5) záporně ve smyslu 2)
   const base8Frac = makeFrac(-base5Frac.n, base5Frac.d);
   const res8 = mulFrac(base8Frac, base8Frac);
   qs.push({
@@ -362,7 +359,7 @@ function generateQuestions(){
     value: fracValue(res8)
   });
 
-  // 9) číslo ze 5) záporně ve smyslu 3) -> -n5^2
+  // 9) číslo ze 5) záporně ve smyslu 3)
   const sq5 = mulFrac(base5Frac, base5Frac);
   const res9 = makeFrac(-sq5.n, sq5.d);
   qs.push({
@@ -371,8 +368,7 @@ function generateQuestions(){
     value: fracValue(res9)
   });
 
-  // 10) kombinace 5) a 4), např. 150,01
-  //     – vezmeme integer jako v 5) a přidáme desetinnou část s dvěma ciframi
+  // 10) kombinace 5) a 4)
   const int10 = genType5Base();
   const k10 = randInt(1,19); // 01..19
   const frac10Digits = String(k10).padStart(2,'0');
@@ -387,7 +383,7 @@ function generateQuestions(){
     _base10Str: base10Str
   });
 
-  // 11) číslo ze 10) záporně ve smyslu 2) -> (−x)^2
+  // 11) číslo ze 10) záporně ve smyslu 2)
   const base11Frac = makeFrac(-base10Frac.n, base10Frac.d);
   const res11 = mulFrac(base11Frac, base11Frac);
   qs.push({
@@ -396,7 +392,7 @@ function generateQuestions(){
     value: fracValue(res11)
   });
 
-  // 12) číslo ze 10) záporně ve smyslu 3) -> -x^2
+  // 12) číslo ze 10) záporně ve smyslu 3)
   const sq10 = mulFrac(base10Frac, base10Frac);
   const res12 = makeFrac(-sq10.n, sq10.d);
   qs.push({
@@ -405,15 +401,13 @@ function generateQuestions(){
     value: fracValue(res12)
   });
 
-  // 13) zlomek, čitatel i jmenovatel ve smyslu 1) (kladná celá do 20),
-  //     jmenovatel zvolen tak, aby měl konečný desetinný rozvoj
+  // 13) zlomek
   const denChoices = [2,4,5,8,10,20];
   let base13;
   while(true){
     const d13 = choice(denChoices);
     const n13 = randInt(1,20);
     const fr = makeFrac(n13,d13);
-    // nechceme, aby po krácení vyšel celý, ale není to nutné – nechám tak
     base13 = fr;
     break;
   }
@@ -425,7 +419,7 @@ function generateQuestions(){
     _base13: base13
   });
 
-  // 14) číslo ze 13) záporně ve smyslu 2) -> (−zlomek)^2
+  // 14) číslo ze 13) záporně ve smyslu 2)
   const base14 = makeFrac(-base13.n, base13.d);
   const res14 = mulFrac(base14, base14);
   qs.push({
@@ -434,7 +428,7 @@ function generateQuestions(){
     value: fracValue(res14)
   });
 
-  // 15) číslo ze 13) záporně ve smyslu 3) -> -(zlomek)^2
+  // 15) číslo ze 13) záporně ve smyslu 3)
   const sq13 = mulFrac(base13, base13);
   const res15 = makeFrac(-sq13.n, sq13.d);
   qs.push({
@@ -443,8 +437,15 @@ function generateQuestions(){
     value: fracValue(res15)
   });
 
+  // 🔀 tady přidáme promíchání pořadí (Fisher–Yates)
+  for(let i = qs.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [qs[i], qs[j]] = [qs[j], qs[i]];
+  }
+
   return qs;
 }
+
 
 /* ---------- stav ---------- */
 let roundNo = 1;
