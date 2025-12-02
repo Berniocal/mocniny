@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Druhé mocniny – kola po 15 příkladech</title>
+<meta name="theme-color" content="#0b1323" />
+<style>
+  :root{
+    --bg:#0b1323; --panel:#0f1729; --text:#e6eef8; --muted:#9fb0c7; --accent:#60a5fa;
+    --ok:#22c55e; --wrong:#ef4444; --card:#101826;
+  }
+  *{box-sizing:border-box}
+  html,body{
+    height:100%;margin:0;
+    background:linear-gradient(180deg,var(--bg),#0d1528);
+    color:var(--text);
+    font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+  }
+  .app{max-width:min(800px,96vw);margin:24px auto;padding:16px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .tag{
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid #233152;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .btn{
+    appearance:none;border:1px solid #25324f;background:#15203a;
+    color:var(--text);padding:8px 14px;border-radius:12px;cursor:pointer;
+    font-size:14px;
+  }
+  .btn.primary{border-color:#245bb5;background:#1b3b70}
+  .btn:disabled{opacity:.5;cursor:default}
+  .panel{
+    background:var(--panel);
+    border-radius:18px;
+    border:1px solid #1b2946;
+    padding:16px;
+  }
+  .qtext{
+    font-size:24px;
+    line-height:1.3;
+    margin-bottom:12px;
+    min-height:2em;
+  }
+  .status{
+    font-size:14px;
+    color:var(--muted);
+    min-height:1.5em;
+  }
+  .status.ok{color:var(--ok)}
+  .status.bad{color:var(--wrong)}
+  .answer-area{
+    margin:10px 0 4px;
+  }
+
+  .whole-input{
+    padding:8px 10px;
+    border-radius:10px;
+    border:1px solid #243356;
+    background:#0f1729;
+    color:var(--text);
+    font-size:18px;
+    width:160px;
+  }
+  .whole-input:focus{outline:none;border-color:var(--accent)}
+
+  .frac-wrapper{
+    display:none;
+    align-items:center;
+    justify-content:flex-start;
+    gap:6px;
+  }
+  .frac-box{
+    display:inline-flex;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:center;
+  }
+  .frac-input{
+    width:120px;
+    padding:4px 8px;
+    border-radius:6px;
+    border:1px solid #243356;
+    background:#0f1729;
+    color:var(--text);
+    font-size:16px;
+    text-align:center;
+  }
+  .frac-input:focus{outline:none;border-color:var(--accent)}
+  .frac-bar{
+    height:1px;
+    background:#e5e7eb;
+    margin:3px 0;
+  }
+
+  .kbd{
+    margin-top:10px;
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:6px;
+  }
+  .kbd button{
+    padding:10px 0;
+    font-size:18px;
+    border-radius:10px;
+    border:1px solid #243356;
+    background:#101826;
+    color:var(--text);
+    cursor:pointer;
+  }
+  .kbd button:hover{background:#18233e}
+  .kbd button.k-wide{
+    grid-column:span 2;
+  }
+
+  .bottom-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:12px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .icons-wrap{
+    position:fixed;
+    top:8px;
+    right:10px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    z-index:10;
+    font-size:18px;
+  }
+  .icons-line{
+    display:flex;
+    gap:4px;
+    align-items:center;
+  }
+</style>
+
+<!-- MathJax -->
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div class="icons-wrap">
+  <div class="icons-line">
+    👵 <span id="grannyCount">0</span>
+  </div>
+  <div class="icons-line">
+    😈 <span id="devilCount">0</span>
+  </div>
+</div>
+
+<div class="app">
+  <header>
+    <div class="tag">Kolo: <span id="roundNo">1</span></div>
+    <div class="tag">Příklad v kole: <span id="qIndex">1</span> / 15</div>
+    <div class="tag">Správných celkem: <span id="qCorrect">0</span></div>
+    <div class="tag">Špatných celkem: <span id="qWrong">0</span></div>
+    <div style="flex:1"></div>
+    <button class="btn" id="btnResetAll">Reset vše</button>
+  </header>
+
+  <section class="panel">
+    <div class="qtext" id="qText"></div>
+
+    <div class="answer-area">
+      <input id="answerWhole" class="whole-input" autocomplete="off" inputmode="decimal" />
+      <div id="fracWrapper" class="frac-wrapper">
+        <span>=</span>
+        <div class="frac-box">
+          <input id="answerNum" class="frac-input" autocomplete="off" inputmode="numeric" />
+          <div class="frac-bar"></div>
+          <input id="answerDen" class="frac-input" autocomplete="off" inputmode="numeric" />
+        </div>
+      </div>
+    </div>
+
+    <div class="kbd" id="kbd">
+      <button data-key="7">7</button>
+      <button data-key="8">8</button>
+      <button data-key="9">9</button>
+      <button data-key="back">←</button>
+
+      <button data-key="4">4</button>
+      <button data-key="5">5</button>
+      <button data-key="6">6</button>
+      <button data-key="clear">C</button>
+
+      <button data-key="1">1</button>
+      <button data-key="2">2</button>
+      <button data-key="3">3</button>
+      <button data-key="neg">−</button>
+
+      <button data-key="0">0</button>
+      <button data-key=",">,</button>
+      <button class="k-wide" data-key="frac">zlomková čára</button>
+    </div>
+
+    <div class="bottom-bar">
+      <div>
+        <button class="btn primary" id="btnCheck">Ověřit výsledek</button>
+        <button class="btn" id="btnNext" disabled>Další příklad</button>
+        <button class="btn" id="btnNextRound" disabled>Další kolo</button>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------- pomocné funkce pro čísla / zlomky ---------- */
+function randInt(min, max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+function choice(arr){
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+function gcd(a,b){
+  a=Math.abs(a); b=Math.abs(b);
+  while(b){ let t=a%b; a=b; b=t; }
+  return a||1;
+}
+function makeFrac(n,d){
+  if(d === 0) return {n:1,d:0};
+  if(d < 0){ n=-n; d=-d; }
+  const g = gcd(n,d);
+  n = n/g; d = d/g;
+  return {n,d};
+}
+function mulFrac(a,b){ return makeFrac(a.n*b.n, a.d*b.d); }
+function addFrac(a,b){ return makeFrac(a.n*b.d + b.n*a.d, a.d*b.d); }
+function fracValue(fr){ return fr.n/fr.d; }
+
+/* formát desetinného čísla s čárkou (max 4 desetinná místa) */
+function fmtDec(x){
+  let s = x.toFixed(4);
+  s = s.replace('.', ',');
+  if(s.includes(',')){
+    s = s.replace(/0+$/,'').replace(/,$/,'');
+
+  }
+  return s;
+}
+
+/* jednoduchý TeX pro zlomek výsledku */
+function texFracSimple(fr){
+  const n = fr.n, d = fr.d;
+  if(d === 1) return String(n);
+  const absn = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  return sign + '\\frac{' + absn + '}{' + d + '}';
+}
+
+/* ---------- generátor 15 typů příkladů na druhou mocninu ---------- */
+
+function generateQuestions(){
+  const qs = [];
+
+  // 1) kladné celé číslo do 20
+  const n1 = randInt(1,20);
+  const base1 = makeFrac(n1,1);
+  const res1  = mulFrac(base1, base1);
+  qs.push({
+    latex: n1 + '^2 =',
+    frac: res1,
+    value: fracValue(res1)
+  });
+
+  // 2) záporné číslo do 20 ve smyslu (-16)^2
+  const n2 = randInt(1,20);
+  const base2 = makeFrac(-n2,1);
+  const res2 = mulFrac(base2, base2); // kladné
+  qs.push({
+    latex: '\\left(-' + n2 + '\\right)^2 =',
+    frac: res2,
+    value: fracValue(res2)
+  });
+
+  // 3) záporné číslo do 20 ve smyslu -16^2  (výsledek záporný)
+  const n3 = randInt(1,20);
+  const base3 = makeFrac(n3,1);
+  const sq3 = mulFrac(base3, base3);
+  const res3 = makeFrac(-sq3.n, sq3.d);
+  qs.push({
+    latex: '-' + n3 + '^2 =',
+    frac: res3,
+    value: fracValue(res3)
+  });
+
+  // 4) desetinné číslo < 1, dvě platné číslice, první 1  (0,10–0,19)
+  const k4 = randInt(10,19);             // 10..19
+  const base4Frac = makeFrac(k4,100);    // 0,10 .. 0,19
+  const base4Str = '0,' + String(k4);    // pro zobrazení
+  const res4 = mulFrac(base4Frac, base4Frac);
+  qs.push({
+    latex: base4Str + '^2 =',
+    frac: res4,
+    value: fracValue(res4),
+    _base4Frac: base4Frac,
+    _base4Str: base4Str
+  });
+
+  // 5) velká čísla – 2 až 5 cifer, samé nuly a:
+  //    - buď jen první cifra nenulová (3000, 500, 9000, …)
+  //    - nebo první dvě cifry 11–19 a zbytek nuly (1100, 19000, …)
+  function genType5Base(){
+    const len = randInt(2,5);
+    const useTwo = Math.random()<0.5;
+    if(useTwo && len>=2){
+      const firstTwo = randInt(11,19);
+      const pow10 = Math.pow(10, len-2);
+      return firstTwo * pow10;   // 11..19, 110..190, 1100..1900, 11000..19000
+    }else{
+      const firstDigit = randInt(1,9);
+      const pow10 = Math.pow(10, len-1);
+      return firstDigit * pow10; // 10,20,...,90000
+    }
+  }
+
+  const n5 = genType5Base();
+  const base5Frac = makeFrac(n5,1);
+  const res5 = mulFrac(base5Frac, base5Frac);
+  qs.push({
+    latex: n5 + '^2 =',
+    frac: res5,
+    value: fracValue(res5),
+    _base5Frac: base5Frac,
+    _base5Int: n5
+  });
+
+  // 6) číslo ze 4) záporně ve smyslu 2) -> (−a)^2, výsledek kladný
+  const base6Frac = makeFrac(-base4Frac.n, base4Frac.d);
+  const res6 = mulFrac(base6Frac, base6Frac); // stejné jako 4), ale jiný zápis
+  qs.push({
+    latex: '\\left(-' + base4Str + '\\right)^2 =',
+    frac: res6,
+    value: fracValue(res6)
+  });
+
+  // 7) číslo ze 4) záporně ve smyslu 3) -> -a^2, výsledek záporný
+  const sq4 = mulFrac(base4Frac, base4Frac);
+  const res7 = makeFrac(-sq4.n, sq4.d);
+  qs.push({
+    latex: '-' + base4Str + '^2 =',
+    frac: res7,
+    value: fracValue(res7)
+  });
+
+  // 8) číslo ze 5) záporně ve smyslu 2) -> (−n5)^2
+  const base8Frac = makeFrac(-base5Frac.n, base5Frac.d);
+  const res8 = mulFrac(base8Frac, base8Frac);
+  qs.push({
+    latex: '\\left(-' + n5 + '\\right)^2 =',
+    frac: res8,
+    value: fracValue(res8)
+  });
+
+  // 9) číslo ze 5) záporně ve smyslu 3) -> -n5^2
+  const sq5 = mulFrac(base5Frac, base5Frac);
+  const res9 = makeFrac(-sq5.n, sq5.d);
+  qs.push({
+    latex: '-' + n5 + '^2 =',
+    frac: res9,
+    value: fracValue(res9)
+  });
+
+  // 10) kombinace 5) a 4), např. 150,01
+  //     – vezmeme integer jako v 5) a přidáme desetinnou část s dvěma ciframi
+  const int10 = genType5Base();
+  const k10 = randInt(1,19); // 01..19
+  const frac10Digits = String(k10).padStart(2,'0');
+  const base10Str = int10 + ',' + frac10Digits;
+  const base10Frac = makeFrac(int10*100 + k10, 100);
+  const res10 = mulFrac(base10Frac, base10Frac);
+  qs.push({
+    latex: base10Str + '^2 =',
+    frac: res10,
+    value: fracValue(res10),
+    _base10Frac: base10Frac,
+    _base10Str: base10Str
+  });
+
+  // 11) číslo ze 10) záporně ve smyslu 2) -> (−x)^2
+  const base11Frac = makeFrac(-base10Frac.n, base10Frac.d);
+  const res11 = mulFrac(base11Frac, base11Frac);
+  qs.push({
+    latex: '\\left(-' + base10Str + '\\right)^2 =',
+    frac: res11,
+    value: fracValue(res11)
+  });
+
+  // 12) číslo ze 10) záporně ve smyslu 3) -> -x^2
+  const sq10 = mulFrac(base10Frac, base10Frac);
+  const res12 = makeFrac(-sq10.n, sq10.d);
+  qs.push({
+    latex: '-' + base10Str + '^2 =',
+    frac: res12,
+    value: fracValue(res12)
+  });
+
+  // 13) zlomek, čitatel i jmenovatel ve smyslu 1) (kladná celá do 20),
+  //     jmenovatel zvolen tak, aby měl konečný desetinný rozvoj
+  const denChoices = [2,4,5,8,10,20];
+  let base13;
+  while(true){
+    const d13 = choice(denChoices);
+    const n13 = randInt(1,20);
+    const fr = makeFrac(n13,d13);
+    // nechceme, aby po krácení vyšel celý, ale není to nutné – nechám tak
+    base13 = fr;
+    break;
+  }
+  const res13 = mulFrac(base13, base13);
+  qs.push({
+    latex: '\\left(' + texFracSimple(base13) + '\\right)^2 =',
+    frac: res13,
+    value: fracValue(res13),
+    _base13: base13
+  });
+
+  // 14) číslo ze 13) záporně ve smyslu 2) -> (−zlomek)^2
+  const base14 = makeFrac(-base13.n, base13.d);
+  const res14 = mulFrac(base14, base14);
+  qs.push({
+    latex: '\\left(' + texFracSimple(base14) + '\\right)^2 =',
+    frac: res14,
+    value: fracValue(res14)
+  });
+
+  // 15) číslo ze 13) záporně ve smyslu 3) -> -(zlomek)^2
+  const sq13 = mulFrac(base13, base13);
+  const res15 = makeFrac(-sq13.n, sq13.d);
+  qs.push({
+    latex: '-\\left(' + texFracSimple(base13) + '\\right)^2 =',
+    frac: res15,
+    value: fracValue(res15)
+  });
+
+  return qs;
+}
+
+/* ---------- stav ---------- */
+let roundNo = 1;
+let questions = generateQuestions();
+let index = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let grannyCount = 0;
+let devilCount = 0;
+let streakConsec = 0;
+let roundFinished = false;
+
+const elRoundNo = document.getElementById('roundNo');
+const elQText  = document.getElementById('qText');
+const elQIndex = document.getElementById('qIndex');
+const elQCorrect = document.getElementById('qCorrect');
+const elQWrong   = document.getElementById('qWrong');
+const elStatus   = document.getElementById('status');
+
+const elWhole = document.getElementById('answerWhole');
+const elFracWrap = document.getElementById('fracWrapper');
+const elNum = document.getElementById('answerNum');
+const elDen = document.getElementById('answerDen');
+
+const elBtnCheck = document.getElementById('btnCheck');
+const elBtnNext = document.getElementById('btnNext');
+const elBtnNextRound = document.getElementById('btnNextRound');
+const elBtnResetAll = document.getElementById('btnResetAll');
+const elKbd = document.getElementById('kbd');
+
+const elGrannyCount = document.getElementById('grannyCount');
+const elDevilCount  = document.getElementById('devilCount');
+
+let fractionMode = false;
+let activeInput = elWhole;
+
+/* ---------- UI / MathJax ---------- */
+function typeset(el){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([el]).catch(()=>{});
+  }
+}
+
+function setStatus(msg, kind, isTeX){
+  elStatus.className = "status";
+  if(kind === "ok") elStatus.classList.add("ok");
+  if(kind === "bad") elStatus.classList.add("bad");
+  elStatus.innerHTML = isTeX ? msg : msg.replace(/</g,"&lt;");
+  typeset(elStatus);
+}
+
+function clearAnswer(){
+  elWhole.value = "";
+  elNum.value = "";
+  elDen.value = "";
+  fractionMode = false;
+  elWhole.style.display = "inline-block";
+  elFracWrap.style.display = "none";
+  activeInput = elWhole;
+  elBtnNext.disabled = true;
+  elBtnCheck.disabled = false;
+  elWhole.focus();
+}
+
+function showQuestion(){
+  const q = questions[index];
+  elQIndex.textContent = String(index+1);
+  elQText.innerHTML = '\\(' + q.latex + '\\)';
+  typeset(elQText);
+  clearAnswer();
+  setStatus("", null, false);
+  roundFinished = false;
+}
+
+/* ---------- čtení odpovědi ---------- */
+function parseNumber(str){
+  const s = str.replace(',', '.').trim();
+  if(!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+function getUserValue(){
+  if(fractionMode){
+    const a = parseNumber(elNum.value);
+    const b = parseNumber(elDen.value);
+    if(a === null || b === null || b === 0) return {ok:false, msg:"Doplň čitatel i jmenovatel (jmenovatel nesmí být 0)."};
+    return {ok:true, value:a / b};
+  }else{
+    const a = parseNumber(elWhole.value);
+    if(a === null) return {ok:false, msg:"Zadej výsledek (desetinná čárka je , )."};
+    return {ok:true, value:a};
+  }
+}
+
+/* ---------- kontrola ---------- */
+function addGrannyIfNeeded(){
+  if(streakConsec > 0 && streakConsec % 6 === 0){
+    grannyCount++;
+    elGrannyCount.textContent = String(grannyCount);
+  }
+}
+
+function checkAnswer(){
+  const res = getUserValue();
+  if(!res.ok){
+    setStatus(res.msg, "bad", false);
+    return;
+  }
+  const user = res.value;
+  const correct = questions[index].value;
+  const diff = Math.abs(user - correct);
+
+  if(diff < 1e-6){
+    correctCount++;
+    elQCorrect.textContent = String(correctCount);
+    streakConsec++;
+    addGrannyIfNeeded();
+    setStatus("Správně 👌", "ok", false);
+  }else{
+    wrongCount++;
+    devilCount++;
+    elQWrong.textContent = String(wrongCount);
+    elDevilCount.textContent = String(devilCount);
+    streakConsec = 0;
+
+    const fr = questions[index].frac;
+    const tex = 'Špatně. Správný výsledek je \\( ' +
+      fmtDec(correct) + (fr.d !== 1 ? ' = ' + texFracSimple(fr) : '') + ' \\).';
+    setStatus(tex, "bad", true);
+  }
+
+  elBtnCheck.disabled = true;
+
+  if(index >= questions.length-1){
+    elBtnNext.disabled = true;
+    elBtnNextRound.disabled = false;
+    roundFinished = true;
+  }else{
+    elBtnNext.disabled = false;
+  }
+}
+
+/* ---------- další / kola / reset ---------- */
+function nextQuestion(){
+  if(index < questions.length-1){
+    index++;
+    showQuestion();
+  }
+  if(index >= questions.length-1){
+    elBtnNext.disabled = true;
+  }
+}
+
+function startNextRound(){
+  if(!roundFinished) return;
+  roundNo++;
+  elRoundNo.textContent = String(roundNo);
+  questions = generateQuestions();
+  index = 0;
+  elBtnNextRound.disabled = true;
+  showQuestion();
+}
+
+function resetAll(){
+  roundNo = 1;
+  questions = generateQuestions();
+  index = 0;
+  correctCount = 0;
+  wrongCount  = 0;
+  grannyCount = 0;
+  devilCount  = 0;
+  streakConsec = 0;
+  elRoundNo.textContent = "1";
+  elQCorrect.textContent = "0";
+  elQWrong.textContent   = "0";
+  elGrannyCount.textContent = "0";
+  elDevilCount.textContent  = "0";
+  elBtnNextRound.disabled = true;
+  showQuestion();
+}
+
+/* ---------- klávesnice ---------- */
+function setActive(input){ activeInput = input; }
+elWhole.addEventListener('focus', ()=>setActive(elWhole));
+elNum.addEventListener('focus', ()=>setActive(elNum));
+elDen.addEventListener('focus', ()=>setActive(elDen));
+
+function handleKey(key){
+  if(key === "frac"){
+    if(!fractionMode){
+      fractionMode = true;
+      elWhole.style.display = "none";
+      elFracWrap.style.display = "inline-flex";
+      if(elWhole.value.trim()){
+        elNum.value = elWhole.value;
+      }
+      activeInput = elNum.value.trim() ? elDen : elNum;
+    }else{
+      activeInput = (activeInput === elNum ? elDen : elNum);
+    }
+    activeInput.focus();
+    return;
+  }
+  if(key === "clear"){
+    activeInput.value = "";
+    activeInput.focus();
+    return;
+  }
+  if(key === "back"){
+    activeInput.value = activeInput.value.slice(0,-1);
+    activeInput.focus();
+    return;
+  }
+
+  let v = activeInput.value;
+  if(key === "neg"){
+    if(v.startsWith("-")) return;
+    activeInput.value = v ? "-" + v : "-";
+    activeInput.focus();
+    return;
+  }
+  if(key === ","){
+    if(v.includes(",") || v.includes(".")) return;
+    if(!v) v = "0";
+    activeInput.value = v + ",";
+    activeInput.focus();
+    return;
+  }
+  if(/[0-9]/.test(key)){
+    activeInput.value += key;
+    activeInput.focus();
+    return;
+  }
+}
+
+elKbd.addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-key]');
+  if(!btn) return;
+  const key = btn.getAttribute('data-key');
+  handleKey(key);
+});
+
+/* Enter = ověřit */
+document.addEventListener('keydown', e=>{
+  if(e.key === "Enter"){
+    e.preventDefault();
+    if(!elBtnCheck.disabled) checkAnswer();
+  }
+});
+
+/* ---------- tlačítka ---------- */
+elBtnCheck.addEventListener('click', checkAnswer);
+elBtnNext.addEventListener('click', nextQuestion);
+elBtnNextRound.addEventListener('click', startNextRound);
+elBtnResetAll.addEventListener('click', resetAll);
+
+/* start */
+showQuestion();
+</script>
+</body>
+</html>
