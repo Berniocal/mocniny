@@ -201,6 +201,9 @@
       <button data-key="0">0</button>
       <button data-key=",">,</button>
       <button class="k-wide" data-key="frac">zlomková čára</button>
+
+      <!-- nové tlačítko pro "neexistuje" -->
+      <button class="k-wide" data-key="noexist">neexistuje</button>
     </div>
 
     <div class="bottom-bar">
@@ -258,24 +261,6 @@ function texFracSimple(fr){
 }
 
 /* ---------- generátor 15 typů příkladů na druhou odmocninu ---------- */
-/*
-Typy analogické k mocninám, ale:
- 1) √(n^2) – kladné celé 1–20
- 2) √((-n)^2)
- 3) -√(n^2)
- 4) √(a^2), a v (0,10–0,19)
- 5) √(N^2), N velké číslo se samými nulami
- 6) √((−a)^2)
- 7) -√(a^2)
- 8) √((−N)^2)
- 9) -√(N^2)
-10) √(x^2), x kombinace velkého čísla a desetinné části
-11) √((−x)^2)
-12) -√(x^2)
-13) √((zloměk)^2)
-14) √((−zloměk)^2)
-15) -√((zloměk)^2)
-*/
 
 function generateQuestions(){
   const qs = [];
@@ -312,140 +297,138 @@ function generateQuestions(){
   // 4) √(a^2), a z (0,10–0,19)
   const k4 = randInt(10,19);             // 10..19
   const base4Frac = makeFrac(k4,100);    // 0,10 .. 0,19
-  const base4Str = '0,' + String(k4);    // pro zobrazení výsledku
+  const base4Str = '0,' + String(k4);
   const rad4Frac = mulFrac(base4Frac, base4Frac);
   const rad4Str = fmtDec(fracValue(rad4Frac));
   qs.push({
     latex: '\\sqrt{' + rad4Str + '} =',
     frac: base4Frac,
-    value: fracValue(base4Frac),
-    _base4Frac: base4Frac,
-    _base4Str: base4Str
+    value: fracValue(base4Frac)
   });
 
-  // 5) √(N^2), N velké číslo (2–5 cifer, samé nuly podle pravidel)
-  function genType5Base(){
+  // helper pro velká čísla (typ 5,8,9,11)
+  function genTypeBig(){
     const len = randInt(2,5);
     const useTwo = Math.random()<0.5;
     if(useTwo && len>=2){
       const firstTwo = randInt(11,19);
       const pow10 = Math.pow(10, len-2);
-      return firstTwo * pow10;   // 11..19, 110..190, 1100..1900, ...
+      return firstTwo * pow10;
     }else{
       const firstDigit = randInt(1,9);
       const pow10 = Math.pow(10, len-1);
-      return firstDigit * pow10; // 10,20,...,90000
+      return firstDigit * pow10;
     }
   }
 
-  const n5 = genType5Base();
+  // 5) √(N^2), N velké číslo
+  const n5 = genTypeBig();
   const base5Frac = makeFrac(n5,1);
   const ans5 = base5Frac;
   const rad5 = n5*n5;
   qs.push({
     latex: '\\sqrt{' + rad5 + '} =',
     frac: ans5,
-    value: fracValue(ans5),
-    _base5Frac: base5Frac,
-    _base5Int: n5
+    value: fracValue(ans5)
   });
 
-  // 6) √((−a)^2) – číslo ze 4) záporně ve smyslu 2)
-  const ans6 = base4Frac; // výsledek je opět kladný a
+  // 6) √((−a)^2) – jiná desetinná <1
+  const k6 = randInt(10,19);
+  const base6Frac = makeFrac(k6,100);
+  const base6Str = '0,' + String(k6);
   qs.push({
-    latex: '\\sqrt{\\left(-' + base4Str + '\\right)^2} =',
-    frac: ans6,
-    value: fracValue(ans6)
+    latex: '\\sqrt{\\left(-' + base6Str + '\\right)^2} =',
+    frac: base6Frac,
+    value: fracValue(base6Frac)
   });
 
-  // 7) -√(a^2) – číslo ze 4) záporně ve smyslu 3)
-  const ans7 = makeFrac(-base4Frac.n, base4Frac.d);
+  // 7) -√(b^2) – jiná desetinná <1
+  const k7 = randInt(10,19);
+  const base7Frac = makeFrac(k7,100);
+  const base7Str = '0,' + String(k7);
+  const rad7Frac = mulFrac(base7Frac, base7Frac);
+  const rad7Str = fmtDec(fracValue(rad7Frac));
+  const ans7 = makeFrac(-base7Frac.n, base7Frac.d);
   qs.push({
-    latex: '-\\sqrt{' + fmtDec(fracValue(rad4Frac)) + '} =',
+    latex: '-\\sqrt{' + rad7Str + '} =',
     frac: ans7,
     value: fracValue(ans7)
   });
 
-  // 8) √((−N)^2) – číslo ze 5) záporně ve smyslu 2)
-  const ans8 = base5Frac;
+  // 8) √((−N)^2) – jiné velké N
+  const n8 = genTypeBig();
+  const base8Frac = makeFrac(n8,1);
+  const ans8 = base8Frac;
   qs.push({
-    latex: '\\sqrt{\\left(-' + n5 + '\\right)^2} =',
+    latex: '\\sqrt{\\left(-' + n8 + '\\right)^2} =',
     frac: ans8,
     value: fracValue(ans8)
   });
 
-  // 9) -√(N^2) – číslo ze 5) záporně ve smyslu 3)
-  const ans9 = makeFrac(-base5Frac.n, base5Frac.d);
+  // 9) -√(N^2) – jiné velké N
+  const n9 = genTypeBig();
+  const base9Frac = makeFrac(n9,1);
+  const rad9 = n9*n9;
+  const ans9 = makeFrac(-base9Frac.n, base9Frac.d);
   qs.push({
-    latex: '-\\sqrt{' + (n5*n5) + '} =',
+    latex: '-\\sqrt{' + rad9 + '} =',
     frac: ans9,
     value: fracValue(ans9)
   });
 
-  // 10) √(x^2), x kombinace velkého čísla a desetinné části (např. 150,01)
-  const int10 = genType5Base();
-  const k10 = randInt(1,19); // 01..19
-  const frac10Digits = String(k10).padStart(2,'0');
-  const base10Str = int10 + ',' + frac10Digits;
-  const base10Frac = makeFrac(int10*100 + k10, 100);
-  const rad10Frac = mulFrac(base10Frac, base10Frac);
-  const rad10Str = fmtDec(fracValue(rad10Frac));
-  const ans10 = base10Frac;
+  // 10) √(záporného celého čísla), např. √(-2)
+  const n10 = randInt(1,20);
   qs.push({
-    latex: '\\sqrt{' + rad10Str + '} =',
-    frac: ans10,
-    value: fracValue(ans10),
-    _base10Frac: base10Frac,
-    _base10Str: base10Str
+    latex: '\\sqrt{-' + n10 + '} =',
+    noexist: true
   });
 
-  // 11) √((−x)^2) – číslo ze 10) záporně ve smyslu 2)
-  const ans11 = base10Frac;
+  // 11) √(záporného velkého čísla)
+  const n11 = genTypeBig();
   qs.push({
-    latex: '\\sqrt{\\left(-' + base10Str + '\\right)^2} =',
-    frac: ans11,
-    value: fracValue(ans11)
+    latex: '\\sqrt{-' + n11 + '} =',
+    noexist: true
   });
 
-  // 12) -√(x^2) – číslo ze 10) záporně ve smyslu 3)
-  const ans12 = makeFrac(-base10Frac.n, base10Frac.d);
+  // 12) √(záporného desetinného čísla <1)
+  const k12 = randInt(10,99); // 0,10–0,99
+  const base12Str = '0,' + String(k12).padStart(2,'0');
   qs.push({
-    latex: '-\\sqrt{' + fmtDec(fracValue(rad10Frac)) + '} =',
-    frac: ans12,
-    value: fracValue(ans12)
+    latex: '\\sqrt{-' + base12Str + '} =',
+    noexist: true
   });
 
-  // 13) √((zlomek)^2), čitatel i jmenovatel ve smyslu 1)
+  // 13) √((zlomek)^2)
   const denChoices = [2,4,5,8,10,20];
-  let base13;
-  while(true){
-    const d13 = choice(denChoices);
-    const n13 = randInt(1,20);
-    const fr = makeFrac(n13,d13);
-    base13 = fr;
-    break;
-  }
+  const d13 = choice(denChoices);
+  const n13 = randInt(1,20);
+  const base13 = makeFrac(n13,d13);
   const ans13 = base13;
   qs.push({
     latex: '\\sqrt{\\left(' + texFracSimple(base13) + '\\right)^2} =',
     frac: ans13,
-    value: fracValue(ans13),
-    _base13: base13
+    value: fracValue(ans13)
   });
 
-  // 14) √((−zlomek)^2) – číslo ze 13) záporně ve smyslu 2)
-  const base14 = makeFrac(-base13.n, base13.d);
-  const ans14 = base13; // odmocnina je zase kladná hodnota
+  // 14) √((−zlomek)^2)
+  const d14 = choice(denChoices);
+  const n14 = randInt(1,20);
+  const base14 = makeFrac(n14,d14);
+  const ans14 = base14;
+  const neg14 = makeFrac(-base14.n, base14.d);
   qs.push({
-    latex: '\\sqrt{\\left(' + texFracSimple(base14) + '\\right)^2} =',
+    latex: '\\sqrt{\\left(' + texFracSimple(neg14) + '\\right)^2} =',
     frac: ans14,
     value: fracValue(ans14)
   });
 
-  // 15) -√((zlomek)^2) – číslo ze 13) záporně ve smyslu 3)
-  const ans15 = makeFrac(-base13.n, base13.d);
+  // 15) -√((zlomek)^2)
+  const d15 = choice(denChoices);
+  const n15 = randInt(1,20);
+  const base15 = makeFrac(n15,d15);
+  const ans15 = makeFrac(-base15.n, base15.d);
   qs.push({
-    latex: '-\\sqrt{\\left(' + texFracSimple(base13) + '\\right)^2} =',
+    latex: '-\\sqrt{\\left(' + texFracSimple(base15) + '\\right)^2} =',
     frac: ans15,
     value: fracValue(ans15)
   });
@@ -539,7 +522,13 @@ function parseNumber(str){
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 }
+
 function getUserValue(){
+  // speciální odpověď "neexistuje"
+  if(!fractionMode && elWhole.value.trim().toUpperCase() === "NEEXISTUJE"){
+    return { ok:true, noexist:true };
+  }
+
   if(fractionMode){
     const a = parseNumber(elNum.value);
     const b = parseNumber(elDen.value);
@@ -566,8 +555,42 @@ function checkAnswer(){
     setStatus(res.msg, "bad", false);
     return;
   }
+
+  const q = questions[index];
+
+  // nejdřív úlohy, kde výsledek v R neexistuje
+  if(q.noexist === true){
+    if(res.noexist){
+      // žák správně zvolil "neexistuje"
+      correctCount++;
+      elQCorrect.textContent = String(correctCount);
+      streakConsec++;
+      addGrannyIfNeeded();
+      setStatus("Správně 👌 – v oboru reálných čísel neexistuje.", "ok", false);
+    }else{
+      // žák zadal číslo tam, kde odmocnina neexistuje
+      wrongCount++;
+      devilCount++;
+      elQWrong.textContent = String(wrongCount);
+      elDevilCount.textContent = String(devilCount);
+      streakConsec = 0;
+      setStatus("Špatně. V oboru reálných čísel neexistuje žádné číslo, jehož druhá mocnina by dala toto číslo pod odmocninou.", "bad", false);
+    }
+
+    elBtnCheck.disabled = true;
+    if(index >= questions.length-1){
+      elBtnNext.disabled = true;
+      elBtnNextRound.disabled = false;
+      roundFinished = true;
+    }else{
+      elBtnNext.disabled = false;
+    }
+    return;
+  }
+
+  // standardní úlohy s číselným výsledkem
   const user = res.value;
-  const correct = questions[index].value;
+  const correct = q.value;
   const diff = Math.abs(user - correct);
 
   if(diff < 1e-6){
@@ -583,9 +606,9 @@ function checkAnswer(){
     elDevilCount.textContent = String(devilCount);
     streakConsec = 0;
 
-    const fr = questions[index].frac;
+    const fr = q.frac;
     const tex = 'Špatně. Správný výsledek je \\( ' +
-      fmtDec(correct) + (fr.d !== 1 ? ' = ' + texFracSimple(fr) : '') + ' \\).';
+      fmtDec(correct) + (fr && fr.d !== 1 ? ' = ' + texFracSimple(fr) : '') + ' \\).';
     setStatus(tex, "bad", true);
   }
 
@@ -661,6 +684,16 @@ function handleKey(key){
     activeInput.focus();
     return;
   }
+
+  if(key === "noexist"){
+    fractionMode = false;
+    elWhole.style.display = "inline-block";
+    elFracWrap.style.display = "none";
+    elWhole.value = "NEEXISTUJE";
+    activeInput = elWhole;
+    return;
+  }
+
   if(key === "clear"){
     activeInput.value = "";
     activeInput.focus();
